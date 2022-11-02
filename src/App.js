@@ -1,57 +1,57 @@
-import './App.css';
-import { SearchBar } from './components/SearchBar';
-import { Gallery } from './components/Gallery';
-import { useEffect, useState } from 'react';
-
+import { useEffect, useState } from 'react'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import Gallery from './components/Gallery'
+import SearchBar from './components/SearchBar'
+import AlbumView from './components/AlbumView'
+import ArtistView from './components/ArtistView'
 
 function App() {
-  let [query, setQuery] = useState('');
-  let [data, setData] = useState([]);
-  let [message, setMesssage] = useState('Search for Music!');
+    let [search, setSearch] = useState('')
+    let [message, setMessage] = useState('Search for Music!')
+    let [data, setData] = useState([])
 
-  useEffect(() => {
-    const fetchData = () => {
-      document.title = `${query} Music`
-      fetch(`https://itunes.apple.com/search?term=${query}`)
-        .then(response => response.json())
-        .then(result => {
-          setData(result.results)
-        })
+    const API_URL = 'https://itunes.apple.com/search?term='
+
+    useEffect(() => {
+        if(search) {
+            const fetchData = async () => {
+                document.title = `${search} Music`
+                const response = await fetch(API_URL + search)
+                const resData = await response.json()
+                if (resData.results.length > 0) {
+                    return setData(resData.results)
+                } else {
+                    return setMessage('Not Found')
+                }
+            }
+            fetchData()
+        }
+    }, [search])
+    
+    const handleSearch = (e, term) => {
+        e.preventDefault()
+        setSearch(term)
     }
 
-    fetchData()
-  }, [query])
-
-
-  /*
-  useEffect always runs when the component initially mounts to the dom.
-
-  A.) when there is no dependency list
-  it will run the supplied function whenever there is a change to state or props.
-
-  B.) when there is an empty dependency list
-  it will not run again. Ever. For any reason.
-
-  C.) when there is a dependency list with elements inside
-  it will run when it detects a change to the tracked variables.
-  */
-  const handleSubmit = (e, term) => {
-    e.preventDefault()
-    setQuery(term);
-  }
-
-  return (
-    <>
-      <SearchBar handleSubmit={handleSubmit}/>
+    return (
+      <div>
       {message}
-      <Gallery data={data}/>
-    </>
-  );
+          <Router>
+              <Routes>
+                  <Route path="/" element={
+                      <Fragment>
+                          <SearchBar handleSearch = {handleSearch}/>
+                          <Gallery data={data} />
+                      </Fragment>
+                  } />
+                  <Route path="/album/:id" element={<AlbumView />} />
+                  <Route path="/artist/:id" element={<ArtistView />} />
+              </Routes>
+          </Router>
+      </div>
+  )
+  
 }
 
 export default App;
-
-
-
-
 
